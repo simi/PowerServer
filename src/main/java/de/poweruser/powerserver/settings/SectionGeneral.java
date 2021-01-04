@@ -65,6 +65,11 @@ public class SectionGeneral extends SettingsReader {
                 if(intVerifier.verify(value)) {
                     settings.setConnectionLimitPerClient(intVerifier.getVerifiedValue());
                 }
+            } else if(key.equalsIgnoreCase("serversDumpInterval")) {
+                intVerifier = new IntVerify(1, Integer.MAX_VALUE);
+                if(intVerifier.verify(value)) {
+                    settings.setServersDumpInterval(intVerifier.getVerifiedValue());
+                }
             }
         }
     }

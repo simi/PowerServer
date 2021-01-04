@@ -29,6 +29,7 @@ public class Settings {
     private int emergencyQueryInterval;
     private int maximumSendViolations;
     private int allowedMinimumSendInterval;
+    private int serversDumpInterval;
     private int tempBanDuration;
     private int connectionLimitPerClient;
     private int maximumServersPerHost;
@@ -46,6 +47,7 @@ public class Settings {
         this.maximumServersPerHost = 10;
         this.maximumSendViolations = 50;
         this.allowedMinimumSendInterval = 250;
+        this.serversDumpInterval = 60;
         this.tempBanDuration = 15;
         this.connectionLimitPerClient = 2;
         this.masterServerLists = new ArrayList<URL>();
@@ -282,5 +284,13 @@ public class Settings {
 
     public void setMaximumServersPerHost(int max) {
         this.maximumServersPerHost = max;
+    }
+
+	public long getServersDumpInterval(TimeUnit unit) {
+		return unit.convert(this.serversDumpInterval, TimeUnit.SECONDS);
+	}
+	
+	protected void setServersDumpInterval(int interval) {
+        this.serversDumpInterval = interval;
     }
 }

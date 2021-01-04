@@ -9,6 +9,7 @@ grant {
   permission java.io.FilePermission "banlist.cfg", "write";
   permission java.io.FilePermission "server.log", "read";
   permission java.io.FilePermission "server.log", "write";
+  permission java.io.FilePermission "servers.txt", "write";
   permission java.lang.RuntimePermission "setIO";
   permission java.net.SocketPermission "localhost:27900", "listen";
   permission java.net.SocketPermission "localhost:28900", "listen";

@@ -1,13 +1,17 @@
 package de.poweruser.powerserver.main;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -48,6 +52,7 @@ public class PowerServer {
     private List<InetAddress> masterServers;
     private long lastMasterServerRefresh;
     private long lastMasterServerDownload;
+    private long lastServersDump;
     private Set<GameBase> supportedGames;
     private CommandRegistry commandReg;
     private BanManager<InetAddress> banManager;
@@ -171,8 +176,38 @@ public class PowerServer {
                 Logger.logStatic(LogLevel.HIGH, "Updating the master server list (Download of the domains and refreshing of the IPs)");
                 this.lookUpAndGetMasterServerList(true);
             }
+            
+            if(this.isLastServersDumpDue(this.settings.getServersDumpInterval(TimeUnit.SECONDS), TimeUnit.SECONDS)) {
+                Logger.logStatic(LogLevel.HIGH, "Dumping servers to file");
+                this.dumpServersToFile();
+            }
         }
     }
+
+	private void dumpServersToFile() {
+		PrintWriter writer;
+		try {
+			writer = new PrintWriter("servers.txt", "UTF-8");
+			
+			for (Iterator<GameBase> iterator = this.supportedGames.iterator(); iterator.hasNext();) {
+				GameBase gb = iterator.next();
+				List<InetSocketAddress> servers = gb.getServerList().getActiveServers(this.settings);
+				if(servers != null) {
+					for(InetSocketAddress server : servers) {
+						int gamePort = server.getPort()-1; // get game port, not query port
+						String host = server.getHostString();
+						writer.println(host + ":" + gamePort);
+					}
+				}
+			}
+		    writer.close();
+		    this.lastServersDump = System.currentTimeMillis();
+		} catch (FileNotFoundException e) {
+			Logger.logStatic(LogLevel.HIGH, "Servers dump has failed due to missing file error.");
+		} catch (UnsupportedEncodingException e) {
+			Logger.logStatic(LogLevel.HIGH, "Servers dump has failed due to encoding error.");
+		}
+	}
 
     private void handleIncomingMessage(UDPMessage message) {
         if(message == null) { return; }
@@ -283,6 +318,10 @@ public class PowerServer {
         return (System.currentTimeMillis() - time) > TimeUnit.MILLISECONDS.convert(timeDiff, inputUnit);
     }
 
+    private boolean isLastServersDumpDue(long timeDiff, TimeUnit inputUnit) {
+    	return (System.currentTimeMillis() - this.lastServersDump) > TimeUnit.MILLISECONDS.convert(timeDiff, inputUnit);
+	}
+    
     public void queueCommand(String command) {
         this.commandReg.queueCommand(command);
     }
